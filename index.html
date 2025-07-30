@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satti ui | Сумки и корзинки ручной работы</title>
+    
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: Создано одностраничное приложение (SPA) с вертикальной прокруткой и фиксированной навигацией для мгновенного доступа к разделам. Такая структура идеально подходит для удержания пользователя в едином контексте, что соответствует современным трендам. Ключевая интерактивность сосредоточена в каталоге: вместо перехода на отдельные страницы, детальная информация о товаре открывается в модальном окне (overlay). Это ускоряет взаимодействие и делает просмотр ассортимента бесшовным и интуитивно понятным. Пользовательский путь: знакомство с брендом на главном экране -> исследование преимуществ и философии -> интерактивное взаимодействие с каталогом (фильтрация, просмотр деталей) -> контактная информация. -->
+    <!-- Visualization & Content Choices: 
+        - Информация: Список товаров (сумки, корзинки). Цель: Организация, Информирование. Метод: Интерактивная сетка товаров с фильтрами. Взаимодействие: Кнопки-фильтры ("Все", "Сумки", "Корзинки") динамически обновляют сетку. Клик по карточке открывает модальное окно с подробностями. Обоснование: Классический и эффективный e-commerce паттерн, адаптированный для SPA.
+        - Информация: Преимущества бренда. Цель: Информирование. Метод: Секция с иконками (Unicode) и текстом. Взаимодействие: Статичное отображение. Обоснование: Простой и наглядный способ донести ключевые ценности.
+        - Информация: Детали товара (размеры, материалы). Цель: Детальное информирование. Метод: Модальное окно. Взаимодействие: Открытие по клику, закрытие. Обоснование: Позволяет показать много информации, не перегружая основной интерфейс каталога и не уводя пользователя со страницы.
+        - Библиотеки: Используется только ванильный JavaScript. Никакие внешние библиотеки не подключаются.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        /* Reset and Base Styles */
+        :root {
+            --color-background: #FDFBF8;
+            --color-text: #4a4a4a;
+            --color-accent: #B99470;
+            --color-accent-hover: #A98460;
+            --color-secondary-bg: #EFEBE5;
+            --color-white: #ffffff;
+            --color-gray-200: #e5e7eb;
+            --color-gray-600: #4b5563;
+            --color-gray-700: #374151;
+            --color-gray-800: #1f2937;
+            --font-serif: 'Georgia', 'Times New Roman', serif;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            margin: 0;
+            font-family: var(--font-sans);
+            background-color: var(--color-background);
+            color: var(--color-text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-serif);
+        }
+
+        /* Layout */
+        .container {
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+        @media (min-width: 640px) { .container { max-width: 640px; } }
+        @media (min-width: 768px) { .container { max-width: 768px; } }
+        @media (min-width: 1024px) { .container { max-width: 1024px; } }
+        @media (min-width: 1280px) { .container { max-width: 1280px; } }
+
+        /* Flex & Grid */
+        .flex { display: flex; }
+        .grid { display: grid; }
+        .hidden { display: none; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .items-center { align-items: center; }
+        .flex-col { flex-direction: column; }
+        .gap-8 { gap: 2rem; }
+        .gap-10 { gap: 2.5rem; }
+        .gap-12 { gap: 3rem; }
+        .space-x-8 > :not([hidden]) ~ :not([hidden]) { margin-left: 2rem; }
+        .space-x-4 > :not([hidden]) ~ :not([hidden]) { margin-left: 1rem; }
+        .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+        
+        @media (min-width: 768px) {
+            .md\:flex { display: flex; }
+            .md\:hidden { display: none; }
+            .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .md\:flex-row { flex-direction: row; }
+        }
+        @media (min-width: 1024px) {
+            .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+         @media (min-width: 1280px) {
+            .xl\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+
+        /* Sizing & Spacing */
+        .w-full { width: 100%; }
+        .h-screen { height: 100vh; }
+        .min-h-\[600px\] { min-height: 600px; }
+        .h-72 { height: 18rem; }
+        .max-w-3xl { max-width: 48rem; }
+        .max-w-4xl { max-width: 56rem; }
+        .max-w-lg { max-width: 32rem; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        .px-8 { padding-left: 2rem; padding-right: 2rem; }
+        .p-4 { padding: 1rem; }
+        .p-6 { padding: 1.5rem; }
+        .p-8 { padding: 2rem; }
+        .py-20 { padding-top: 5rem; padding-bottom: 5rem; }
+        .py-24 { padding-top: 6rem; padding-bottom: 6rem; }
+        .py-32 { padding-top: 8rem; padding-bottom: 8rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .mb-12 { margin-bottom: 3rem; }
+        .mb-16 { margin-bottom: 4rem; }
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-4 { margin-top: 1rem; }
+
+        /* Typography */
+        .text-sm { font-size: 0.875rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-3xl { font-size: 1.875rem; }
+        .text-4xl { font-size: 2.25rem; }
+        .text-5xl { font-size: 3rem; }
+        .leading-tight { line-height: 1.25; }
+        .leading-relaxed { line-height: 1.625; }
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .text-white { color: var(--color-white); }
+        .accent-text { color: var(--color-accent); }
+        .text-gray-600 { color: var(--color-gray-600); }
+        .text-gray-700 { color: var(--color-gray-700); }
+        .text-gray-400 { color: #9ca3af; }
+        .hover\:accent-text:hover { color: var(--color-accent); }
+        .hover\:underline:hover { text-decoration: underline; }
+
+        /* Backgrounds & Borders */
+        .bg-white { background-color: var(--color-white); }
+        .bg-white\/80 { background-color: rgba(255, 255, 255, 0.8); }
+        .bg-black\/30 { background-color: rgba(0, 0, 0, 0.3); }
+        .accent-bg { background-color: var(--color-accent); }
+        .accent-bg-hover:hover { background-color: var(--color-accent-hover); }
+        .secondary-bg { background-color: var(--color-secondary-bg); }
+        .bg-gray-200 { background-color: var(--color-gray-200); }
+        .bg-gray-800 { background-color: var(--color-gray-800); }
+        .bg-cover { background-size: cover; }
+        .bg-center { background-position: center; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-full { border-radius: 99px; }
+        .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        
+        /* Positioning */
+        .fixed { position: fixed; }
+        .absolute { position: absolute; }
+        .relative { position: relative; }
+        .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+        .top-0 { top: 0; }
+        .left-0 { left: 0; }
+        .right-0 { right: 0; }
+        .bottom-0 { bottom: 0; }
+        .z-40 { z-index: 40; }
+        .z-50 { z-index: 50; }
+
+        /* Transitions & Transforms */
+        .transition-colors { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+        .transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+        .duration-500 { transition-duration: 500ms; }
+        .group:hover .group-hover\:scale-110 { transform: scale(1.1); }
+        
+        /* Other */
+        .overflow-hidden { overflow: hidden; }
+        .cursor-pointer { cursor: pointer; }
+        .backdrop-blur-lg { backdrop-filter: blur(16px); }
+        .object-cover { object-fit: cover; }
+        a { color: inherit; text-decoration: inherit; }
+
+        /* Custom App Styles */
+        .nav-item.active {
+            color: var(--color-accent);
+            font-weight: 700;
+        }
+        .filter-btn.active {
+            background-color: var(--color-accent);
+            color: var(--color-white);
+        }
+        .modal-hidden { display: none; }
+        .modal-active { display: flex; }
+        
+        @media (min-width: 768px) {
+            .md\:text-7xl { font-size: 4.5rem; }
+            .md\:text-5xl { font-size: 3rem; }
+        }
+
+        #header {
+            background: #1c120d;
+            color: #f4f2f0;
+        }
+
+        #mobile-menu-button {
+            color: #fff;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        #mobile-menu {
+            transition: 1s;
+            margin-bottom: 30px;
+        }
+
+        #home {
+            background: url("img/Gemini_Generated_Image_fk53uifk5.png");
+        }
+
+        #about-img {
+            background-color: #4a4a4a;
+            border: none;
+            box-shadow: none;
+        }
+
+        #catalog-btn {
+            border: none;
+            cursor: pointer;
+            height: 40px;
+            width: 130px;
+        }
+
+        .details-btn {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        footer {
+            padding-bottom: 20px;
+            padding-top: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header id="header" class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-40 shadow-sm">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#home" id="logo__text" class="text-3xl font-bold accent-text">Satti ui</a>
+            <nav class="hidden md:flex space-x-8">
+                <a href="#about" class="nav-item hover:accent-text transition-colors">О нас</a>
+                <a href="#advantages" class="nav-item hover:accent-text transition-colors">Преимущества</a>
+                <a href="#catalog" class="nav-item hover:accent-text transition-colors">Каталог</a>
+                <a href="#contact" class="nav-item hover:accent-text transition-colors">Контакты</a>
+            </nav>
+            <button id="mobile-menu-button" class="md:hidden text-2xl">☰</button>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 flex flex-col space-y-4">
+            <a href="#about" class="nav-item hover:accent-text transition-colors">О нас</a>
+            <a href="#advantages" class="nav-item hover:accent-text transition-colors">Преимущества</a>
+            <a href="#catalog" class="nav-item hover:accent-text transition-colors">Каталог</a>
+            <a href="#contact" class="nav-item hover:accent-text transition-colors">Контакты</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Home Section -->
+        <section id="home" class="h-screen min-h-[600px] bg-cover bg-center flex items-center relative" style="background-color: #D6CCC2;">
+            <div class="absolute inset-0 bg-black/30"></div>
+            <div class="container mx-auto px-6 text-center text-white relative">
+                <h1 class="text-5xl md:text-7xl font-bold leading-tight mb-4">Тепло натуральных материалов</h1>
+                <p class="text-lg text-xl mb-8">Сумки и корзинки из хлопка и ткани. Создано с любовью в Казахстане.</p>
+                <a href="#catalog" class="accent-bg text-white font-bold py-3 px-8 rounded-full text-lg accent-bg-hover transition-colors shadow-lg">Смотреть каталог</a>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="py-20 md:py-32">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-semibold mb-4">Философия Satti ui</h2>
+                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">В этом разделе мы делимся историей и ценностями нашего бренда. Мы верим, что предметы, которыми мы себя окружаем, влияют на наше настроение и состояние. Поэтому мы создаем не просто вещи, а частички уюта и гармонии для вашего дома.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div class="rounded-lg overflow-hidden shadow-xl">
+                        <img src="img/1.jpg" id="about-img" alt="Ручная работа" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <h3 class="text-3xl font-semibold mb-4">Уют создается из деталей</h3>
+                        <p class="text-gray-600 mb-4 leading-relaxed">"Satti ui" переводится как "удачный дом". Для нас это дом, наполненный светом, теплом и вещами, сделанными с душой. Каждое наше изделие создается вручную из 100% натурального хлопка и качественных тканей. Мы вкладываем в них заботу и внимание, чтобы они радовали вас долгие годы.</p>
+                        <p class="text-gray-600 leading-relaxed">Мы черпаем вдохновение в природе, ее фактурах и оттенках, и стремимся к минимализму и функциональности в дизайне. Наши сумки и корзинки призваны стать не только красивым, но и практичным дополнением вашего интерьера и стиля.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Advantages Section -->
+        <section id="advantages" class="py-20 md:py-24 secondary-bg">
+            <div class="container mx-auto px-6">
+                 <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-semibold mb-4">Почему выбирают нас</h2>
+                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">Здесь представлены ключевые принципы нашей работы. Это не просто слова, а основа, на которой строится доверие наших клиентов и качество каждого изделия.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-10 text-center">
+                    <div class="p-8 bg-white rounded-lg shadow-md">
+                        <div class="text-5xl mb-4">🌱</div>
+                        <h3 class="text-2xl font-semibold mb-2">Натуральные материалы</h3>
+                        <p class="text-gray-600">Используем только 100% хлопок и проверенные, экологичные ткани.</p>
+                    </div>
+                    <div class="p-8 bg-white rounded-lg shadow-md">
+                        <div class="text-5xl mb-4">👐</div>
+                        <h3 class="text-2xl font-semibold mb-2">Ручная работа</h3>
+                        <p class="text-gray-600">Каждое изделие уникально и создано с особым вниманием к деталям.</p>
+                    </div>
+                    <div class="p-8 bg-white rounded-lg shadow-md">
+                        <div class="text-5xl mb-4">🚚</div>
+                        <h3 class="text-2xl font-semibold mb-2">Доставка по Казахстану</h3>
+                        <p class="text-gray-600">Бережно упакуем и доставим ваш заказ в любой город.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Catalog Section -->
+        <section id="catalog" class="py-20 md:py-32">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-semibold mb-4">Наши изделия</h2>
+                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">Добро пожаловать в наш каталог! Здесь вы можете познакомиться со всем ассортиментом. Используйте фильтры, чтобы легко найти то, что вам нужно. Каждая вещь здесь — результат кропотливой ручной работы.</p>
+                </div>
+
+                <div class="flex justify-center space-x-4 mb-12">
+                    <button id="catalog-btn" class="filter-btn active py-2 px-6 rounded-full font-semibold" data-filter="all">Все</button>
+                    <button id="catalog-btn" class="filter-btn bg-gray-200 text-gray-700 py-2 px-6 rounded-full font-semibold" data-filter="сумки">Сумки</button>
+                    <button id="catalog-btn" class="filter-btn bg-gray-200 text-gray-700 py-2 px-6 rounded-full font-semibold" data-filter="корзинки">Корзинки</button>
+                </div>
+
+                <div id="product-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="py-20 md:py-32 secondary-bg">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-4xl md:text-5xl font-semibold mb-4">Свяжитесь с нами</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto mb-12">Если у вас есть вопросы, предложения или вы хотите сделать индивидуальный заказ, мы всегда на связи. Ниже вы найдете наши контакты и информацию о доставке.</p>
+                <div class="max-w-lg mx-auto text-left bg-white p-8 rounded-lg shadow-lg">
+                    <div class="mb-6">
+                        <h3 class="font-bold text-xl mb-2">Наши контакты:</h3>
+                        <p class="text-gray-700"><strong>Телефон/WhatsApp:</strong> +7 (701) 738 59 23</p>
+                        <p class="text-gray-700"><strong>Email:</strong> nuriya15@mail.ru</p>
+                        <p class="text-gray-700"><strong>Instagram:</strong> <a href="#" class="accent-text hover:underline">@satti_ui_brand</a></p>
+                    </div>
+                     <div>
+                        <h3 class="font-bold text-xl mb-2">Доставка и оплата:</h3>
+                        <p class="text-gray-700">Мы доставляем заказы по всему Казахстану через Казпочту. Оплата возможна через Kaspi или банковской картой. Бесплатная доставка при заказе от 20 000 тг.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p>&copy; 2025 Satti ui</p>
+            <p class="text-sm text-gray-400 mt-2">Создано с любовью в Казахстане</p>
+        </div>
+    </footer>
+
+    <!-- Modal -->
+    <div id="product-modal" class="modal-hidden fixed inset-0 bg-black/70 z-50 justify-center items-center p-4">
+        <div id="modal-content" class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col md:flex-row relative">
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const products = [
+        { id: 1, name: "Льняная сумка 'Дала'", category: "сумки", price: 12000, imageUrl: "img/1.jpg", description: "Вместительная и стильная сумка-шоппер из натурального льна. Идеальна для городских прогулок и походов за покупками.", materials: "100% лен, хлопковая подкладка", size: "40см x 45см" },
+        { id: 2, name: "Корзина 'Тау'", category: "корзинки", price: 18000, imageUrl: "img/2.jpg", description: "Плетеная корзина из хлопкового каната для хранения пледов, подушек или детских игрушек. Привнесет в ваш интерьер нотку уюта.", materials: "100% хлопковый канат", size: "45см (диаметр) x 40см (высота)" },
+        { id: 3, name: "Плетеная авоська 'Көл'", category: "сумки", price: 9500, imageUrl: "img/3.jpg", description: "Легкая и компактная плетеная сумка-авоська. Отличная экологичная альтернатива пластиковым пакетам.", materials: "100% хлопок", size: "Растягивается до 50см" },
+        { id: 4, name: "Декоративная корзинка 'Шөп'", category: "корзинки", price: 7000, imageUrl: "img/4.jpg", description: "Небольшая корзинка для мелочей, ключей, косметики или в качестве кашпо для небольшого цветка.", materials: "Джут, хлопок", size: "20см (диаметр) x 15см (высота)" },
+        { id: 5, name: "Корзинка-тоут 'Аспан'", category: "сумки", price: 15000, imageUrl: "img/a.jpg", description: "Элегантная и минималистичная сумка-тоут из плотной хлопковой ткани. Имеет внутренний карман для телефона и ключей.", materials: "Плотный хлопок (канвас)", size: "38см x 42см x 10см" },
+        { id: 6, name: "Хлебная корзинка 'Нан'", category: "корзинки", price: 6500, imageUrl: "img/6.jpg", description: "Стильная корзинка для красивой подачи хлеба или выпечки на стол. Создаст особую атмосферу во время семейных завтраков.", materials: "Лен, хлопок", size: "30см (диаметр)" }
+    ];
+
+    const productGrid = document.getElementById('product-grid');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const modal = document.getElementById('product-modal');
+    const modalContent = document.getElementById('modal-content');
+
+    const formatPrice = (price) => new Intl.NumberFormat('ru-RU').format(price) + ' тг';
+
+    const renderProducts = (filteredProducts) => {
+        productGrid.innerHTML = '';
+        filteredProducts.forEach(product => {
+            const productCard = document.createElement('div');
+            productCard.className = 'group relative overflow-hidden rounded-lg shadow-lg cursor-pointer';
+            productCard.innerHTML = `
+                <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
+                <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);"></div>
+                <div class="absolute bottom-0 left-0 p-6 text-white">
+                    <h3 class="text-xl font-semibold" style="font-family: var(--font-serif);">${product.name}</h3>
+                    <p class="text-lg font-bold mt-1">${formatPrice(product.price)}</p>
+                    <button class="details-btn mt-4 text-sm font-semibold accent-text" data-id="${product.id}">Подробнее →</button>
+                </div>
+            `;
+            productGrid.appendChild(productCard);
+        });
+    };
+
+    const openModal = (productId) => {
+        const product = products.find(p => p.id === parseInt(productId));
+        if (!product) return;
+
+        modalContent.innerHTML = `
+            <div class="w-full md:w-1/2 h-64 md:h-auto overflow-hidden rounded-t-lg md:rounded-l-lg md:rounded-t-none">
+                <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-full object-cover">
+            </div>
+            <div class="w-full md:w-1/2 p-8 overflow-y-auto relative">
+                <h2 class="text-3xl font-bold mb-4" style="font-family: var(--font-serif);">${product.name}</h2>
+                <p class="text-2xl font-bold accent-text mb-6">${formatPrice(product.price)}</p>
+                <p class="text-gray-700 mb-6">${product.description}</p>
+                <div class="text-sm">
+                    <p class="mb-2"><strong>Материалы:</strong> ${product.materials}</p>
+                    <p><strong>Размеры:</strong> ${product.size}</p>
+                </div>
+                 <button class="absolute top-0 right-0 m-4 text-3xl text-gray-400 hover:text-gray-800" id="close-modal-btn">&times;</button>
+            </div>
+        `;
+        modal.classList.remove('modal-hidden');
+        modal.classList.add('modal-active');
+        document.body.style.overflow = 'hidden';
+
+        document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+    };
+
+    const closeModal = () => {
+        modal.classList.add('modal-hidden');
+        modal.classList.remove('modal-active');
+        document.body.style.overflow = 'auto';
+    };
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const filter = button.dataset.filter;
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            const filteredProducts = filter === 'all' ? products : products.filter(p => p.category === filter);
+            renderProducts(filteredProducts);
+        });
+    });
+
+    productGrid.addEventListener('click', (e) => {
+        const detailsButton = e.target.closest('.details-btn');
+        if (detailsButton) {
+            openModal(detailsButton.dataset.id);
+        }
+    });
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+    
+    renderProducts(products);
+    
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    const sections = document.querySelectorAll('section');
+    const navItems = document.querySelectorAll('.nav-item');
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            if (pageYOffset >= sectionTop - 100) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navItems.forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('href').substring(1) === current) {
+                item.classList.add('active');
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>
